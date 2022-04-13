@@ -1,5 +1,5 @@
 from enum import Enum
-import pygame
+from random import randrange
 import numpy as np
 
 
@@ -26,29 +26,27 @@ class Coordinate:
     def __copy__(self):
         return Coordinate(self.x, self.y, self.shape)
 
+    def __eq__(self, other):
+        return isinstance(other, Coordinate) and self.x == other.x and self.y == other.y
+
 
 def copy_coordinates(coord1, coord2):
     coord1.x = coord2.x
     coord1.y = coord2.y
 
 
-class Apple:
-    pass
-
-
 class Snake:
     def __init__(self):
-        head = Coordinate(0, 2, Shape.HEAD)
-        tail1 = Coordinate(0, 1, Shape.BODY)
+        head = Coordinate(2, 0, Shape.HEAD)
+        tail1 = Coordinate(1, 0, Shape.BODY)
         tail2 = Coordinate(0, 0, Shape.BODY)
         self.coordinates = np.array([head, tail1, tail2])
-        self.direction = Direction.RIGHT
+        self.head = self.coordinates[0]
+        self.direction = Direction.DOWN
 
     def turn(self, direction):
-        if direction not in self.get_allowed_turns():
-            return
-        self.direction = direction
-        # self.move()
+        if direction in self.get_allowed_turns():
+            self.direction = direction
 
     def move(self):
         """Move the snake one cell ahead"""
@@ -58,16 +56,16 @@ class Snake:
             copy_coordinates(self.coordinates[i], self.coordinates[i - 1])
             i -= 1
         # determine the new head position
-        head = self.coordinates[0]
+        # head = self.coordinates[0]
         match self.direction:
             case Direction.RIGHT:
-                head.x += 1
+                self.head.x += 1
             case Direction.LEFT:
-                head.x -= 1
+                self.head.x -= 1
             case Direction.UP:
-                head.y -= 1
+                self.head.y -= 1
             case Direction.DOWN:
-                head.y += 1
+                self.head.y += 1
 
     def grow(self):
         self.coordinates = np.append(self.coordinates, self.coordinates[-1].__copy__())
@@ -77,7 +75,11 @@ class Snake:
         If the snake is moving up, it can go left or right.
         If the snake is moving right, it can go up or down.
         """
-        if self.direction.value % 2 == 0:
+        # if self.direction.value % 2 == 0:
+        #     return Direction.RIGHT, Direction.LEFT
+        # else:
+        #     return Direction.UP, Direction.DOWN
+        if self.direction in [Direction.UP, Direction.DOWN]:
             return Direction.RIGHT, Direction.LEFT
         else:
             return Direction.UP, Direction.DOWN
@@ -87,14 +89,45 @@ class SnakeGame:
     def __init__(self, map_shape=(100, 100)):
         self.map = np.zeros(shape=map_shape)
         self.snake = Snake()
+        self.apple = self.generate_apple_coordinate()
+        self.game_over = False
 
     def move_snake(self):
         self.snake.move()
+        if self.check_collision():
+            self.game_over = True
+        if self.snake.head == self.apple:
+            self.eat_apple()
+
+    def check_collision(self):
+        x_max = self.map.shape[0]
+        y_max = self.map.shape[1]
+        if self.snake.head.x >= x_max or self.snake.head.x < 0:
+            return True
+        if self.snake.head.y >= y_max or self.snake.head.y < 0:
+            return True
+        for coordinate in self.snake.coordinates[1:]:
+            if self.snake.head == coordinate:
+                return True
+        return False
+
+    def turn_snake(self, direction):
+        self.snake.turn(direction)
+
+    def generate_apple_coordinate(self):
+        max_range = self.map.shape[0] - 1
+        x = randrange(max_range)
+        y = randrange(max_range)
+        if self.map[x, y] == 0:
+            return Coordinate(x, y, Shape.APPLE)
+        return self.generate_apple_coordinate()
 
     def eat_apple(self):
         self.snake.grow()
+        self.apple = self.generate_apple_coordinate()
 
-    def draw_snake(self):
+    def update_map(self):
         self.map = np.zeros(shape=self.map.shape)
         for coordinate in self.snake.coordinates:
             self.map[coordinate.x, coordinate.y] = coordinate.shape.value
+        self.map[self.apple.x, self.apple.y] = self.apple.shape.value
