@@ -1,5 +1,6 @@
 from enum import Enum
 from random import randrange
+
 import numpy as np
 
 
@@ -28,6 +29,9 @@ class Coordinate:
 
     def __eq__(self, other):
         return isinstance(other, Coordinate) and self.x == other.x and self.y == other.y
+
+    def __to_string__(self):
+        return f'x: {self.x}, y: {self.y}'
 
 
 def copy_coordinates(coord1, coord2):
@@ -75,10 +79,6 @@ class Snake:
         If the snake is moving up, it can go left or right.
         If the snake is moving right, it can go up or down.
         """
-        # if self.direction.value % 2 == 0:
-        #     return Direction.RIGHT, Direction.LEFT
-        # else:
-        #     return Direction.UP, Direction.DOWN
         if self.direction in [Direction.UP, Direction.DOWN]:
             return Direction.RIGHT, Direction.LEFT
         else:
@@ -91,6 +91,7 @@ class SnakeGame:
         self.snake = Snake()
         self.apple = self.generate_apple_coordinate()
         self.game_over = False
+        self.score = 0
 
     def move_snake(self):
         self.snake.move()
@@ -103,11 +104,14 @@ class SnakeGame:
         x_max = self.map.shape[0]
         y_max = self.map.shape[1]
         if self.snake.head.x >= x_max or self.snake.head.x < 0:
+            print('snake went off screen')
             return True
         if self.snake.head.y >= y_max or self.snake.head.y < 0:
+            print('snake went off screen')
             return True
         for coordinate in self.snake.coordinates[1:]:
             if self.snake.head == coordinate:
+                print(f'snake head ({self.snake.head.x, self.snake.head.y}) collided with {coordinate.x, coordinate.y}')
                 return True
         return False
 
@@ -125,6 +129,7 @@ class SnakeGame:
     def eat_apple(self):
         self.snake.grow()
         self.apple = self.generate_apple_coordinate()
+        self.score += 1
 
     def update_map(self):
         self.map = np.zeros(shape=self.map.shape)
