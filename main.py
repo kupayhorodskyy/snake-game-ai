@@ -1,15 +1,16 @@
 from snake import SnakeGame, Direction
-from search_controller import SearchController, straight_line_move, a_star
+from search_controller import SearchController, straight_line_move, a_star, depth_first_search
 import pygame
 
 DIMENSIONS_MULTIPLIER = 10
-FPS = 45
+FPS = 60
 
 if __name__ == "__main__":
     pygame.init()
     sg = SnakeGame(map_shape=(50, 50))
     # controller = SearchController(sg, straight_line_move)
-    controller = SearchController(sg, a_star)
+    # controller = SearchController(sg, a_star)
+    controller = SearchController(sg, depth_first_search)
 
     x = sg.map.shape[0]
     y = sg.map.shape[1]
@@ -21,8 +22,8 @@ if __name__ == "__main__":
     clock_object = pygame.time.Clock()
 
     while not sg.game_over:
-        sg.move_snake()
         sg.update_map()
+        sg.move_snake()
         sg.turn_snake(controller.get_next_move())
 
         for event in pygame.event.get():
@@ -64,6 +65,7 @@ if __name__ == "__main__":
     print(f'The move set was: {controller.moves}')
 
     while True:
+        clock_object.tick(30)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()

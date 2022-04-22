@@ -13,6 +13,12 @@ class SearchController:
         head = self.sg.snake.head.__copy__()
         apple = self.sg.apple.__copy__()
         cells = self.algorithm(head.__copy__(), apple.__copy__(), self.sg.map)
+        if cells is None:
+            cells = [survive((head.x, head.y), self.sg.map)]
+            if cells[0] is None:
+                self.moves = None
+                return
+
         self.moves = []
         for cell in cells:
             if cell.x > head.x:
@@ -29,8 +35,11 @@ class SearchController:
                 self.moves.append(Direction.UP)
 
     def get_next_move(self):
+        if self.moves is None:
+            return None
         if len(self.moves) == 0:
             self.__calculate_next_moves()
+            return self.get_next_move()
         return self.moves.pop(0)
 
 
@@ -73,15 +82,14 @@ def __get_neighbors(node, game_map):
     shape = game_map.shape
 
     potential_neighbors = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+    neighbors = []
 
     for n in potential_neighbors:
         if n[0] >= shape[0] or n[0] < 0 or n[1] >= shape[1] or n[1] < 0 \
-                or game_map[n[0], n[1]] in (Shape.BODY.value, Shape.HEAD.value):
-            potential_neighbors.remove(n)
-
-    # if len(potential_neighbors) == 4:
-    #     print('too many neighbors')
-    return potential_neighbors
+                or int(game_map[n[0], n[1]]) in (1, 2):
+            continue
+        neighbors.append(n)
+    return neighbors
 
 
 def a_star(start, goal, game_map):
@@ -102,11 +110,6 @@ def a_star(start, goal, game_map):
         if node in f_score_map.keys():
             return f_score_map[node]
         return math.inf
-
-    # def new_cmp_lt(a, b):
-    #     return f_score(a) < f_score(b)
-    #
-    # heapq.cmp_lt = new_cmp_lt  # override heapq comparison
 
     g_score_map[s] = 0
     f_score_map[s] = __h(s, g)
@@ -129,5 +132,35 @@ def a_star(start, goal, game_map):
                 f_score_map[neighbor] = tentative_g_score + __h(neighbor, g)
                 if neighbor not in open_set:
                     heapq.heappush(open_set, (f_score(neighbor), neighbor))
-    print('Controller failed to find a path')
     return None  # failure
+
+
+def depth_first_search(start, goal, game_map):
+    s = (start.x, start.y)
+    g = (goal.x, goal.y)
+
+    visited = set()
+    stack = [s]
+    came_from = {}
+
+    while len(stack) > 0:
+        v = stack.pop()
+        if v == g:
+            return __reconstruct_path(came_from, v)
+        if v not in visited:
+            visited.add(v)
+            for n in __get_neighbors(v, game_map):
+                if n not in visited:
+                    stack.append(n)
+                    came_from[n] = v
+    return None
+
+
+
+
+def survive(node, game_map):
+    neighbors = __get_neighbors(node, game_map)
+    if len(neighbors) == 0:
+        return None
+    n = neighbors[0]
+    return Coordinate(n[0], n[1], Shape.EMPTY)

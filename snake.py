@@ -1,3 +1,4 @@
+import traceback
 from enum import Enum
 from random import randrange
 
@@ -116,7 +117,8 @@ class SnakeGame:
         return False
 
     def turn_snake(self, direction):
-        self.snake.turn(direction)
+        if direction is not None:
+            self.snake.turn(direction)
 
     def generate_apple_coordinate(self):
         max_range = self.map.shape[0] - 1
