@@ -12,7 +12,10 @@ class SearchController:
     def __calculate_next_moves(self):
         head = self.sg.snake.head.__copy__()
         apple = self.sg.apple.__copy__()
-        cells = self.algorithm(head.__copy__(), apple.__copy__(), self.sg.map)
+        if self.algorithm is auto:
+            cells = self.algorithm(head.__copy__(), apple.__copy__(), self.sg.map, self.sg)
+        else:
+            cells = self.algorithm(head.__copy__(), apple.__copy__(), self.sg.map)
         if cells is None:
             cells = [survive((head.x, head.y), self.sg.map)]
             if cells[0] is None:
@@ -143,7 +146,7 @@ def depth_first_search(start, goal, game_map):
     stack = [s]
     came_from = {}
 
-    while len(stack) > 0:
+    while stack:
         v = stack.pop()
         if v == g:
             return __reconstruct_path(came_from, v)
@@ -156,6 +159,24 @@ def depth_first_search(start, goal, game_map):
     return None
 
 
+def breadth_first_search(start, goal, game_map):
+    s = (start.x, start.y)
+    g = (goal.x, goal.y)
+    visited = set()
+    came_from = {}
+    queue = [s]
+
+    while queue:
+        v = queue.pop(0)
+        if v == g:
+            return __reconstruct_path(came_from, v)
+        if v not in visited:
+            visited.add(v)
+            for n in __get_neighbors(v, game_map):
+                if n not in visited:
+                    queue.append(n)
+                    came_from[n] = v
+    return None
 
 
 def survive(node, game_map):

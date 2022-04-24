@@ -90,18 +90,30 @@ class SnakeGame:
     def __init__(self, map_shape=(100, 100)):
         self.map = np.zeros(shape=map_shape)
         self.snake = Snake()
-        self.apple = self.generate_apple_coordinate()
+        self.apple = self.__generate_apple_coordinate()
         self.game_over = False
         self.score = 0
 
-    def move_snake(self):
+    def update_game(self, direction):
+        self.__turn_snake(direction)
+        self.__move_snake()
+        if not self.game_over:
+            self.__update_map()
+
+    def get_snake_percentage(self):
+        """How much of the map is the snake occupying?"""
+        shape = self.map.shape[0]
+        area = shape * shape
+        return len(self.snake.coordinates) / area
+
+    def __move_snake(self):
         self.snake.move()
-        if self.check_collision():
+        if self.__check_collision():
             self.game_over = True
         if self.snake.head == self.apple:
-            self.eat_apple()
+            self.__eat_apple()
 
-    def check_collision(self):
+    def __check_collision(self):
         x_max = self.map.shape[0]
         y_max = self.map.shape[1]
         if self.snake.head.x >= x_max or self.snake.head.x < 0:
@@ -116,24 +128,24 @@ class SnakeGame:
                 return True
         return False
 
-    def turn_snake(self, direction):
+    def __turn_snake(self, direction):
         if direction is not None:
             self.snake.turn(direction)
 
-    def generate_apple_coordinate(self):
+    def __generate_apple_coordinate(self):
         max_range = self.map.shape[0] - 1
         x = randrange(max_range)
         y = randrange(max_range)
         if self.map[x, y] == 0:
             return Coordinate(x, y, Shape.APPLE)
-        return self.generate_apple_coordinate()
+        return self.__generate_apple_coordinate()
 
-    def eat_apple(self):
+    def __eat_apple(self):
         self.snake.grow()
-        self.apple = self.generate_apple_coordinate()
+        self.apple = self.__generate_apple_coordinate()
         self.score += 1
 
-    def update_map(self):
+    def __update_map(self):
         self.map = np.zeros(shape=self.map.shape)
         for coordinate in self.snake.coordinates:
             self.map[coordinate.x, coordinate.y] = coordinate.shape.value
