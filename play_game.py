@@ -52,3 +52,11 @@ def play_game(controller_algorithm, map_shape, fps, dimensions_multiplier):
         pygame.display.flip()
         clock_object.tick(fps)
     return sg.score
+
+
+def play_game_without_drawing(controller_algorithm, map_shape):
+    sg = SnakeGame(map_shape=(map_shape, map_shape))
+    controller = SearchController(sg, controller_algorithm)
+    while not sg.game_over:
+        sg.update_game(controller.get_next_move())
+    return sg.score
