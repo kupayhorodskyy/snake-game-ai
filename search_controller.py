@@ -12,10 +12,7 @@ class SearchController:
     def __calculate_next_moves(self):
         head = self.sg.snake.head.__copy__()
         apple = self.sg.apple.__copy__()
-        if self.algorithm is auto:
-            cells = self.algorithm(head.__copy__(), apple.__copy__(), self.sg.map, self.sg)
-        else:
-            cells = self.algorithm(head.__copy__(), apple.__copy__(), self.sg.map)
+        cells = self.algorithm(head.__copy__(), apple.__copy__(), self.sg.map)
         if cells is None:
             cells = [survive((head.x, head.y), self.sg.map)]
             if cells[0] is None:
