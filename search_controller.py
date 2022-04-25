@@ -115,7 +115,7 @@ def a_star(start, goal, game_map):
     f_score_map[s] = __h(s, g)
     heapq.heappush(open_set, (f_score(s), s))
 
-    while len(open_set) > 0:
+    while open_set:
         popped = heapq.heappop(open_set)
         current = popped[1]
         if current == g:
@@ -173,6 +173,27 @@ def breadth_first_search(start, goal, game_map):
                 if n not in visited:
                     queue.append(n)
                     came_from[n] = v
+    return None
+
+
+def greedy_best_first_search(start, goal, game_map):
+    s = (start.x, start.y)
+    g = (goal.x, goal.y)
+    visited = set()
+    came_from = {}
+    open_set = []
+    heapq.heappush(open_set, (__h(s, g), s))
+
+    while open_set:
+        current = heapq.heappop(open_set)[1]
+        if current == g:
+            return __reconstruct_path(came_from, current)
+        visited.add(current)
+        for neighbor in __get_neighbors(current, game_map):
+            if neighbor not in visited:
+                came_from[neighbor] = current
+                heapq.heappush(open_set, (__h(neighbor, g), neighbor))
+
     return None
 
 
