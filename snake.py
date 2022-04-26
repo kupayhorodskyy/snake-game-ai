@@ -1,4 +1,3 @@
-import traceback
 from enum import Enum
 from random import randrange
 
@@ -61,7 +60,6 @@ class Snake:
             copy_coordinates(self.coordinates[i], self.coordinates[i - 1])
             i -= 1
         # determine the new head position
-        # head = self.coordinates[0]
         match self.direction:
             case Direction.RIGHT:
                 self.head.x += 1
@@ -122,9 +120,9 @@ class SnakeGame:
         if self.snake.head.y >= y_max or self.snake.head.y < 0:
             print('snake went off screen')
             return True
-        for coordinate in self.snake.coordinates[1:]:
+        for coordinate in self.snake.coordinates[1:]:  # check whether the snake collided with its body
             if self.snake.head == coordinate:
-                print(f'snake head ({self.snake.head.x, self.snake.head.y}) collided with {coordinate.x, coordinate.y}')
+                print(f'snake head collided with {coordinate.x, coordinate.y}')
                 return True
         return False
 

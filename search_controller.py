@@ -15,7 +15,7 @@ class SearchController:
         cells = self.algorithm(head.__copy__(), apple.__copy__(), self.sg.map)
         if cells is None:
             cells = [survive((head.x, head.y), self.sg.map)]
-            if cells[0] is None:
+            if cells[0] is None:  # dead end, terminate gracefully
                 self.moves = None
                 return
 
@@ -36,7 +36,7 @@ class SearchController:
 
     def get_next_move(self):
         if self.moves is None:
-            return None
+            return None  # dead end
         if len(self.moves) == 0:
             self.__calculate_next_moves()
             return self.get_next_move()
@@ -135,6 +135,51 @@ def a_star(start, goal, game_map):
     return None  # failure
 
 
+def a_star_with_forward_checking(start, goal, game_map):
+    s = (start.x, start.y)
+    g = (goal.x, goal.y)
+
+    came_from = {}
+    g_score_map = {}
+    f_score_map = {}
+    open_set = []
+
+    def g_score(node):
+        if node in g_score_map.keys():
+            return g_score_map[node]
+        return math.inf
+
+    def f_score(node):
+        if node in f_score_map.keys():
+            return f_score_map[node]
+        return math.inf
+
+    g_score_map[s] = 0
+    f_score_map[s] = __h(s, g)
+    heapq.heappush(open_set, (f_score(s), s))
+
+    while open_set:
+        popped = heapq.heappop(open_set)
+        current = popped[1]
+        if current == g:
+            if forward_check(current, game_map)[0]:
+                return __reconstruct_path(came_from, current)
+
+        for neighbor in __get_neighbors(current, game_map):
+            tentative_g_score = g_score(current) + 1
+            if tentative_g_score < g_score(neighbor):
+                # get neighbor direction
+
+                # this path to the neighbor is better
+                came_from[neighbor] = current
+                g_score_map[neighbor] = tentative_g_score
+                f_score_map[neighbor] = tentative_g_score + __h(neighbor, g)
+                if neighbor not in open_set:
+                    heapq.heappush(open_set, (f_score(neighbor), neighbor))
+
+    return None  # failure
+
+
 def depth_first_search(start, goal, game_map):
     s = (start.x, start.y)
     g = (goal.x, goal.y)
@@ -176,6 +221,27 @@ def breadth_first_search(start, goal, game_map):
     return None
 
 
+def forward_check(node, game_map):
+    #  do bfs for reachable nodes
+    def __num_of_empty_cells(gmap):
+        return len(gmap[gmap == Shape.EMPTY.value])
+
+    reachable_neighbors = 0
+    visited = set()
+
+    queue = [node]
+    while queue:
+        current = queue.pop(0)
+        for neighbor in __get_neighbors(current, game_map):
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)
+                reachable_neighbors += 1
+        if reachable_neighbors / __num_of_empty_cells(game_map) >= 0.30:
+            return True, reachable_neighbors
+    return False, reachable_neighbors
+
+
 def greedy_best_first_search(start, goal, game_map):
     s = (start.x, start.y)
     g = (goal.x, goal.y)
@@ -198,8 +264,20 @@ def greedy_best_first_search(start, goal, game_map):
 
 
 def survive(node, game_map):
+    max_x = game_map.shape[0] - 1
+    max_y = game_map.shape[1] - 1
     neighbors = __get_neighbors(node, game_map)
     if len(neighbors) == 0:
         return None
-    n = neighbors[0]
-    return Coordinate(n[0], n[1], Shape.EMPTY)
+    evaluated_neighbors = []
+    while neighbors:
+        n = neighbors.pop()
+        check = forward_check(n, game_map)
+        edge = n[0] >= max_x or n[0] <= 0 or n[1] >= max_y or n[1] <= 0
+        if check[0] and not edge:
+            return Coordinate(n[0], n[1], Shape.EMPTY)
+        evaluated_neighbors.append([n, check[1]])
+
+    # if there is no node that is not on the edge, return the one with the most reachable nodes
+    best = max(evaluated_neighbors, key=lambda neighbor: neighbor[1])
+    return Coordinate(best[0][0], best[0][1], Shape.EMPTY)
