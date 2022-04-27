@@ -1,14 +1,14 @@
 from play_game import play_game, play_game_without_drawing
 from search_controller import a_star, depth_first_search, breadth_first_search, greedy_best_first_search, \
-    a_star_with_forward_checking
+    a_star_with_forward_checking, super_algorithm
 
-MAP_SHAPE = 50
-DIMENSIONS_MULTIPLIER = 10
-FPS = 1000
+MAP_SHAPE = 30
+DIMENSIONS_MULTIPLIER = 15
+FPS = 60
 NUM_OF_TESTS = 15
 
 if __name__ == "__main__":
-    print(play_game(a_star, MAP_SHAPE, FPS, DIMENSIONS_MULTIPLIER))
+    print(play_game(super_algorithm, MAP_SHAPE, FPS, DIMENSIONS_MULTIPLIER))
 
     # a_star_scores = []
     # print('TESTING A*')

@@ -1,4 +1,5 @@
 import math
+import numpy as np
 from snake import Coordinate, Direction, Shape
 import heapq
 
@@ -12,7 +13,10 @@ class SearchController:
     def __calculate_next_moves(self):
         head = self.sg.snake.head.__copy__()
         apple = self.sg.apple.__copy__()
-        cells = self.algorithm(head.__copy__(), apple.__copy__(), self.sg.map)
+        if self.algorithm is super_algorithm:
+            cells = self.algorithm(head.__copy__(), apple.__copy__(), self.sg.map, self.sg.snake)
+        else:
+            cells = self.algorithm(head.__copy__(), apple.__copy__(), self.sg.map)
         if cells is None:
             cells = [survive((head.x, head.y), self.sg.map)]
             if cells[0] is None:  # dead end, terminate gracefully
@@ -132,6 +136,72 @@ def a_star(start, goal, game_map):
                 f_score_map[neighbor] = tentative_g_score + __h(neighbor, g)
                 if neighbor not in open_set:
                     heapq.heappush(open_set, (f_score(neighbor), neighbor))
+    return None  # failure
+
+
+def super_algorithm(start, goal, game_map, snake):
+    s = (start.x, start.y)
+    g = (goal.x, goal.y)
+
+    apple_coordinate = g
+    head_coordinate = [snake.head.x, snake.head.y]
+    body_coordinates = [[c.x, c.y] for c in snake.coordinates[1:]]
+
+    initial_state = [head_coordinate, body_coordinates]
+
+    def generate_map(head_c, body_cs):
+        m = np.zeros((game_map.shape[0], game_map.shape[1]))
+        m[apple_coordinate] = Shape.APPLE.value
+        m[head_c] = Shape.HEAD.value
+        for c in body_cs:
+            m[c[0], c[1]] = Shape.BODY.value
+        return m
+
+    came_from = {}
+    g_score_map = {}
+    f_score_map = {}
+    state_map = {}
+    open_set = []
+
+    def g_score(node):
+        if node in g_score_map.keys():
+            return g_score_map[node]
+        return math.inf
+
+    def f_score(node):
+        if node in f_score_map.keys():
+            return f_score_map[node]
+        return math.inf
+
+    g_score_map[s] = 0
+    f_score_map[s] = __h(s, g)
+    heapq.heappush(open_set, (f_score(s), s))
+
+    state_map[s] = initial_state
+
+    while open_set:
+        popped = heapq.heappop(open_set)
+        current = popped[1]
+        current_state = state_map[current]
+        current_body = current_state[1]
+        current_map = generate_map(current, current_body)
+
+        if current == g:
+            if forward_check(current, game_map)[0]:
+                return __reconstruct_path(came_from, current)
+
+        for neighbor in __get_neighbors(current, current_map):
+            tentative_g_score = g_score(current) + 1
+            if tentative_g_score < g_score(neighbor):
+                # this path to the neighbor is better
+                came_from[neighbor] = current
+                g_score_map[neighbor] = tentative_g_score
+                f_score_map[neighbor] = tentative_g_score + __h(neighbor, g)
+                if neighbor not in open_set:
+                    heapq.heappush(open_set, (f_score(neighbor), neighbor))
+                # generate neighbor state
+                neighbor_body = np.concatenate(([current], current_body[:-1]))
+                state_map[neighbor] = [neighbor, neighbor_body]
     return None  # failure
 
 

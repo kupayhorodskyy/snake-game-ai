@@ -6,6 +6,8 @@ import pygame
 def play_game(controller_algorithm, map_shape, fps, dimensions_multiplier):
     pygame.init()
     sg = SnakeGame(map_shape=(map_shape, map_shape))
+    # fix?
+    sg.update_game(sg.snake.direction)
     controller = SearchController(sg, controller_algorithm)
 
     x = sg.map.shape[0]
