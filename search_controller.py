@@ -13,7 +13,7 @@ class SearchController:
     def __calculate_next_moves(self):
         head = self.sg.snake.head.__copy__()
         apple = self.sg.apple.__copy__()
-        if self.algorithm is super_algorithm:
+        if self.algorithm is a_start_forward_checking_tail_tracking:
             cells = self.algorithm(head.__copy__(), apple.__copy__(), self.sg.map, self.sg.snake)
         else:
             cells = self.algorithm(head.__copy__(), apple.__copy__(), self.sg.map)
@@ -139,7 +139,7 @@ def a_star(start, goal, game_map):
     return None  # failure
 
 
-def super_algorithm(start, goal, game_map, snake):
+def a_start_forward_checking_tail_tracking(start, goal, game_map, snake):
     s = (start.x, start.y)
     g = (goal.x, goal.y)
 
@@ -187,7 +187,7 @@ def super_algorithm(start, goal, game_map, snake):
         current_map = generate_map(current, current_body)
 
         if current == g:
-            if forward_check(current, game_map)[0]:
+            if forward_check(current, current_map)[0]:
                 return __reconstruct_path(came_from, current)
 
         for neighbor in __get_neighbors(current, current_map):
@@ -307,7 +307,7 @@ def forward_check(node, game_map):
                 visited.add(neighbor)
                 queue.append(neighbor)
                 reachable_neighbors += 1
-        if reachable_neighbors / __num_of_empty_cells(game_map) >= 0.30:
+        if reachable_neighbors / __num_of_empty_cells(game_map) >= 0.45:
             return True, reachable_neighbors
     return False, reachable_neighbors
 
@@ -346,7 +346,8 @@ def survive(node, game_map):
         edge = n[0] >= max_x or n[0] <= 0 or n[1] >= max_y or n[1] <= 0
         if check[0] and not edge:
             return Coordinate(n[0], n[1], Shape.EMPTY)
-        evaluated_neighbors.append([n, check[1]])
+        scaled_check = check[1] if (not edge) else (1.5 * check[1])
+        evaluated_neighbors.append([n, scaled_check])
 
     # if there is no node that is not on the edge, return the one with the most reachable nodes
     best = max(evaluated_neighbors, key=lambda neighbor: neighbor[1])

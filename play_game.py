@@ -57,8 +57,13 @@ def play_game(controller_algorithm, map_shape, fps, dimensions_multiplier):
 
 
 def play_game_without_drawing(controller_algorithm, map_shape):
+    print("NEW GAME")
     sg = SnakeGame(map_shape=(map_shape, map_shape))
     controller = SearchController(sg, controller_algorithm)
+    counter = 0
     while not sg.game_over:
         sg.update_game(controller.get_next_move())
+        counter += 1
+        if counter % 200 == 0:
+            print(".", end='')
     return sg.score

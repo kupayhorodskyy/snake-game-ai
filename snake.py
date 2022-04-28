@@ -83,6 +83,13 @@ class Snake:
         else:
             return Direction.UP, Direction.DOWN
 
+    def __copy__(self):
+        s = Snake()
+        s.head = self.head.__copy__()
+        s.coordinates = self.coordinates.__copy__()
+        s.direction = self.direction
+        return s
+
 
 class SnakeGame:
     def __init__(self, map_shape=(100, 100)):
